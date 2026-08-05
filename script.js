@@ -350,40 +350,76 @@ function initMusicPlayer(){
 function initReasonSectionAudio(){
   const shapeAudio = document.getElementById("shapeAudio");
   const reasonsSection = document.getElementById("reasons");
+  const trigger = document.getElementById("shapeAudioTrigger");
+  const hint = document.getElementById("shapeAudioHint");
   if (!shapeAudio || !reasonsSection) return;
 
   let played = false;
-  let gestureAllowed = false;
+  let gestureSeen = false;
+  let sectionVisible = false;
+
+  shapeAudio.volume = 0.65;
+  shapeAudio.preload = "auto";
+  shapeAudio.setAttribute("playsinline", "");
+  shapeAudio.setAttribute("webkit-playsinline", "");
+
+  const setHint = (message) => {
+    if (hint) hint.textContent = message;
+  };
+
+  const showTrigger = () => {
+    if (trigger && !played) trigger.hidden = false;
+  };
+
+  const hideTrigger = () => {
+    if (trigger) trigger.hidden = true;
+  };
 
   const tryPlayShapeAudio = () => {
     if (played) return;
-    const rect = reasonsSection.getBoundingClientRect();
-    const isVisible = rect.top < window.innerHeight * 0.8 && rect.bottom > window.innerHeight * 0.2;
-    if (!isVisible) return;
-
-    shapeAudio.volume = 0.65;
+    if (!sectionVisible) return;
     shapeAudio.currentTime = 0;
     shapeAudio.play().then(() => {
       played = true;
+      hideTrigger();
+      setHint("Now playing: Shape of My Heart.");
       observer.unobserve(reasonsSection);
     }).catch(() => {
-      // Will retry after a user gesture.
+      showTrigger();
+      setHint("Your phone blocked autoplay. Tap the button below to play the song.");
     });
   };
 
-  const unlockAudio = () => {
-    gestureAllowed = true;
-    tryPlayShapeAudio();
+  const handleGesture = () => {
+    gestureSeen = true;
+    if (sectionVisible && !played) {
+      tryPlayShapeAudio();
+    }
   };
 
-  document.addEventListener("pointerdown", unlockAudio, { once: true, capture: true });
-  document.addEventListener("keydown", unlockAudio, { once: true, capture: true });
+  document.addEventListener("pointerdown", handleGesture, { passive: true });
+  document.addEventListener("keydown", handleGesture);
+
+  reasonsSection.addEventListener("click", () => {
+    if (!played) {
+      tryPlayShapeAudio();
+    }
+  });
+
+  if (trigger) {
+    trigger.addEventListener("click", () => {
+      tryPlayShapeAudio();
+    });
+  }
 
   const observer = new IntersectionObserver((entries) => {
     entries.forEach(entry => {
-      if (entry.isIntersecting && !played) {
-        if (gestureAllowed) {
+      sectionVisible = entry.isIntersecting;
+      if (sectionVisible && !played) {
+        if (gestureSeen) {
           tryPlayShapeAudio();
+        } else {
+          showTrigger();
         }
       }
     });

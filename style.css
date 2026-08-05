@@ -261,6 +261,8 @@ h1,h2,h3{font-family:var(--font-display);}
    REASONS GRID
    ========================================================================== */
 .section-hint{font-size:.92rem;color:rgba(251,248,255,.72);margin:0 auto 1.8rem;max-width:640px;line-height:1.6;}
+.shape-audio-trigger{margin:0 auto 1.8rem;}
+.shape-audio-trigger[hidden]{display:none !important;}
 .reasons-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:1.2rem;}
 .reason-card{
   perspective:1000px;height:150px;

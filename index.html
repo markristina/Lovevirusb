@@ -50,11 +50,11 @@
     <span class="music-title">EH PLAY SA UY</span>
     <input type="range" id="volumeSlider" min="0" max="1" step="0.01" value="0.5">
   </div>
-  <audio id="bgMusic" loop>
+  <audio id="bgMusic" loop playsinline webkit-playsinline preload="metadata">
     <!-- Using your birthday greet audio file -->
     <source src="birthday greet.aac" type="audio/aac">
   </audio>
-  <audio id="shapeAudio" preload="auto">
+  <audio id="shapeAudio" preload="auto" playsinline webkit-playsinline>
     <source src="Shape.mp3" type="audio/mpeg">
   </audio>
 </div>
@@ -124,7 +124,8 @@
   <section class="section reasons-section" id="reasons">
     <p class="section-eyebrow" data-aos="fade-up">twenty-three small truths</p>
     <h2 class="section-title" data-aos="fade-up">Reasons I Love You</h2>
-    <p class="section-hint" data-aos="fade-up">Tap anywhere first, then scroll here to hear the special song.</p>
+    <p class="section-hint" id="shapeAudioHint" data-aos="fade-up">Scroll here and the song will try to play automatically. If your phone blocks it, tap the button below.</p>
+    <button type="button" class="btn-glow btn-glow-outline shape-audio-trigger" id="shapeAudioTrigger" hidden>Play Shape of My Heart</button>
     <div class="reasons-grid" id="reasonsGrid"></div>
   </section>
 
