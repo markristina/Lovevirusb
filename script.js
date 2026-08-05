@@ -359,8 +359,6 @@ function initReasonSectionAudio(){
   let sectionVisible = false;
   let observer = null;
   let hasAttemptedPlayback = false;
-  const unlockKey = "shapeAudioUnlocked";
-  const wasUnlockedBefore = localStorage.getItem(unlockKey) === "true";
 
   const audioUrl = new URL("Shape.mp3", window.location.href).toString();
   shapeAudio.src = audioUrl;
@@ -386,7 +384,6 @@ function initReasonSectionAudio(){
 
   const finishPlayback = () => {
     played = true;
-    localStorage.setItem(unlockKey, "true");
     hideTrigger();
     setHint("Now playing: Shape of My Heart.");
     if (observer) observer.unobserve(reasonsSection);
@@ -445,7 +442,7 @@ function initReasonSectionAudio(){
   }
 
   shapeAudio.addEventListener("canplaythrough", () => {
-    if ((gestureSeen || wasUnlockedBefore) && sectionVisible && !played) {
+    if (gestureSeen && sectionVisible && !played) {
       tryPlayShapeAudio();
     }
   });
@@ -459,7 +456,7 @@ function initReasonSectionAudio(){
     entries.forEach(entry => {
       sectionVisible = entry.isIntersecting;
       if (sectionVisible && !played) {
-        if (gestureSeen || wasUnlockedBefore) {
+        if (gestureSeen) {
           tryPlayShapeAudio();
         } else {
           showTrigger();
@@ -469,11 +466,6 @@ function initReasonSectionAudio(){
   }, { threshold: 0.35 });
 
   observer.observe(reasonsSection);
-
-  if (wasUnlockedBefore && !played) {
-    sectionVisible = true;
-    tryPlayShapeAudio();
-  }
 }
 
 /* ==========================================================================
