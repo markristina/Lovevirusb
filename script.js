@@ -379,11 +379,17 @@ function initReasonSectionAudio(){
   };
 
   const showTrigger = () => {
-    if (trigger && !played) trigger.hidden = false;
+    if (trigger && !played) {
+      trigger.hidden = false;
+      trigger.style.display = "block";
+    }
   };
 
   const hideTrigger = () => {
-    if (trigger) trigger.hidden = true;
+    if (trigger) {
+      trigger.hidden = true;
+      trigger.style.display = "none";
+    }
   };
 
   const finishPlayback = () => {
