@@ -416,10 +416,11 @@ function initReasonSectionAudio(){
       event.preventDefault();
       event.stopPropagation();
       if (!played && sectionVisible) {
+        trigger.textContent = "Playing...";
         ensureAudioReady();
         setTimeout(() => {
           tryPlayShapeAudio();
-        }, 120);
+        }, 150);
       } else {
         setHint("Scroll to the Reasons I Love You section and tap the button there.");
       }
