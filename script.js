@@ -355,10 +355,8 @@ function initReasonSectionAudio(){
   if (!shapeAudio || !reasonsSection) return;
 
   let played = false;
-  let gestureSeen = false;
   let sectionVisible = false;
   let observer = null;
-  let hasAttemptedPlayback = false;
 
   const audioUrl = new URL("Shape.mp3", window.location.href).toString();
   shapeAudio.src = audioUrl;
@@ -390,13 +388,8 @@ function initReasonSectionAudio(){
   };
 
   const tryPlayShapeAudio = () => {
-    if (played) return;
-    if (!sectionVisible && !hasAttemptedPlayback) {
-      sectionVisible = true;
-    }
-    if (!sectionVisible && !hasAttemptedPlayback) return;
+    if (played || !sectionVisible) return;
 
-    hasAttemptedPlayback = true;
     shapeAudio.currentTime = 0;
 
     if (shapeAudio.readyState === 0) {
@@ -415,37 +408,17 @@ function initReasonSectionAudio(){
     }
   };
 
-  const handleGesture = () => {
-    gestureSeen = true;
-    if (!played) {
-      tryPlayShapeAudio();
-    }
-  };
-
-  document.addEventListener("pointerdown", handleGesture, { passive: true });
-  document.addEventListener("touchstart", handleGesture, { passive: true });
-  document.addEventListener("mousedown", handleGesture, { passive: true });
-  document.addEventListener("keydown", handleGesture);
-
-  reasonsSection.addEventListener("click", () => {
-    if (!played) {
-      tryPlayShapeAudio();
-    }
-  });
-
   if (trigger) {
     trigger.addEventListener("click", (event) => {
       event.preventDefault();
       event.stopPropagation();
-      handleGesture();
+      if (!played && sectionVisible) {
+        tryPlayShapeAudio();
+      } else {
+        setHint("Scroll to the Reasons I Love You section and tap the button there.");
+      }
     });
   }
-
-  shapeAudio.addEventListener("canplaythrough", () => {
-    if (gestureSeen && sectionVisible && !played) {
-      tryPlayShapeAudio();
-    }
-  });
 
   shapeAudio.addEventListener("error", () => {
     showTrigger();
@@ -456,11 +429,9 @@ function initReasonSectionAudio(){
     entries.forEach(entry => {
       sectionVisible = entry.isIntersecting;
       if (sectionVisible && !played) {
-        if (gestureSeen) {
-          tryPlayShapeAudio();
-        } else {
-          showTrigger();
-        }
+        showTrigger();
+      } else if (!sectionVisible) {
+        hideTrigger();
       }
     });
   }, { threshold: 0.35 });
