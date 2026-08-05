@@ -368,6 +368,12 @@ function initReasonSectionAudio(){
   shapeAudio.setAttribute("crossorigin", "anonymous");
   shapeAudio.load();
 
+  const ensureAudioReady = () => {
+    if (shapeAudio.readyState === 0) {
+      shapeAudio.load();
+    }
+  };
+
   const setHint = (message) => {
     if (hint) hint.textContent = message;
   };
@@ -390,11 +396,8 @@ function initReasonSectionAudio(){
   const tryPlayShapeAudio = () => {
     if (played || !sectionVisible) return;
 
+    ensureAudioReady();
     shapeAudio.currentTime = 0;
-
-    if (shapeAudio.readyState === 0) {
-      shapeAudio.load();
-    }
 
     const playPromise = shapeAudio.play();
     if (playPromise && typeof playPromise.then === "function") {
@@ -413,7 +416,10 @@ function initReasonSectionAudio(){
       event.preventDefault();
       event.stopPropagation();
       if (!played && sectionVisible) {
-        tryPlayShapeAudio();
+        ensureAudioReady();
+        setTimeout(() => {
+          tryPlayShapeAudio();
+        }, 120);
       } else {
         setHint("Scroll to the Reasons I Love You section and tap the button there.");
       }
@@ -430,6 +436,7 @@ function initReasonSectionAudio(){
       sectionVisible = entry.isIntersecting;
       if (sectionVisible && !played) {
         showTrigger();
+        setHint("Scroll here and tap the button to play the song.");
       } else if (!sectionVisible) {
         hideTrigger();
       }
