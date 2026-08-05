@@ -96,6 +96,7 @@ document.addEventListener("DOMContentLoaded", () => {
     initConstellationHeart,
     initCountdown,
     buildReasons,
+    initReasonSectionAudio,
     buildKisses,
     buildGallery,
     initBabyPhotoZoom,
@@ -297,6 +298,51 @@ function initMusicPlayer(){
   });
 
   volume.addEventListener("input", () => audio.volume = parseFloat(volume.value));
+}
+
+function initReasonSectionAudio(){
+  const shapeAudio = document.getElementById("shapeAudio");
+  const reasonsSection = document.getElementById("reasons");
+  if (!shapeAudio || !reasonsSection) return;
+
+  let played = false;
+  let gestureAllowed = false;
+
+  const tryPlayShapeAudio = () => {
+    if (played) return;
+    const rect = reasonsSection.getBoundingClientRect();
+    const isVisible = rect.top < window.innerHeight * 0.8 && rect.bottom > window.innerHeight * 0.2;
+    if (!isVisible) return;
+
+    shapeAudio.volume = 0.65;
+    shapeAudio.currentTime = 0;
+    shapeAudio.play().then(() => {
+      played = true;
+      observer.unobserve(reasonsSection);
+    }).catch(() => {
+      // Will retry after a user gesture.
+    });
+  };
+
+  const unlockAudio = () => {
+    gestureAllowed = true;
+    tryPlayShapeAudio();
+  };
+
+  document.addEventListener("pointerdown", unlockAudio, { once: true, capture: true });
+  document.addEventListener("keydown", unlockAudio, { once: true, capture: true });
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting && !played) {
+        if (gestureAllowed) {
+          tryPlayShapeAudio();
+        }
+      }
+    });
+  }, { threshold: 0.35 });
+
+  observer.observe(reasonsSection);
 }
 
 /* ==========================================================================
