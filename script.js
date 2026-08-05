@@ -359,6 +359,8 @@ function initReasonSectionAudio(){
   let sectionVisible = false;
   let observer = null;
   let hasAttemptedPlayback = false;
+  const unlockKey = "shapeAudioUnlocked";
+  const wasUnlockedBefore = localStorage.getItem(unlockKey) === "true";
 
   const audioUrl = new URL("Shape.mp3", window.location.href).toString();
   shapeAudio.src = audioUrl;
@@ -384,6 +386,7 @@ function initReasonSectionAudio(){
 
   const finishPlayback = () => {
     played = true;
+    localStorage.setItem(unlockKey, "true");
     hideTrigger();
     setHint("Now playing: Shape of My Heart.");
     if (observer) observer.unobserve(reasonsSection);
@@ -417,7 +420,7 @@ function initReasonSectionAudio(){
 
   const handleGesture = () => {
     gestureSeen = true;
-    if (sectionVisible && !played) {
+    if (!played) {
       tryPlayShapeAudio();
     }
   };
@@ -438,16 +441,11 @@ function initReasonSectionAudio(){
       event.preventDefault();
       event.stopPropagation();
       handleGesture();
-      shapeAudio.load();
-      shapeAudio.play().then(finishPlayback).catch(() => {
-        showTrigger();
-        setHint("Tap the button again to start the song.");
-      });
     });
   }
 
   shapeAudio.addEventListener("canplaythrough", () => {
-    if (gestureSeen && sectionVisible && !played) {
+    if ((gestureSeen || wasUnlockedBefore) && sectionVisible && !played) {
       tryPlayShapeAudio();
     }
   });
@@ -461,7 +459,7 @@ function initReasonSectionAudio(){
     entries.forEach(entry => {
       sectionVisible = entry.isIntersecting;
       if (sectionVisible && !played) {
-        if (gestureSeen) {
+        if (gestureSeen || wasUnlockedBefore) {
           tryPlayShapeAudio();
         } else {
           showTrigger();
@@ -471,6 +469,11 @@ function initReasonSectionAudio(){
   }, { threshold: 0.35 });
 
   observer.observe(reasonsSection);
+
+  if (wasUnlockedBefore && !played) {
+    sectionVisible = true;
+    tryPlayShapeAudio();
+  }
 }
 
 /* ==========================================================================
