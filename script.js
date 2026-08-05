@@ -19,11 +19,11 @@ Forever yours.`;
 
 const REASONS = [
   "Your smile","Your kindness","Your patience","Your hugs","Your laugh",
-  "Your support","The way you listen","Your silly jokes","Your determination",
+  "Your support? usahay dili man tanan hehe","The way you listen? ambot lang naminaw!","Your silly jokes","Your determination",
   "How you make me feel safe","Your honesty. Honest kaha? HAHA","Your eyes","The way you care for me",
   "Your voice","How you remember little things? limtanon man HAHA","Your strength","Your warmth",
   "The way you say my name","bisan makalagot ka ","ily gihapon chee",
-  "Happy Birthday Boi","Unta dili nako nimo palaguton hehe"," MWAAAHHHHH"
+  "Happy Birthday loves","Unta dili nako nimo palaguton hehe"," MWAAAHHHHH"
 ];
 
 const COUPONS = [
@@ -31,18 +31,18 @@ const COUPONS = [
 ];
 
 const GALLERY = [
-  {src:"img/1.jpg", caption:"Photo 1"},
-  {src:"img/2.jpg", caption:"Photo 2"},
-  {src:"img/3.png", caption:"Photo 3"},
-  {src:"img/4.jpg", caption:"Photo 4"},
-  {src:"img/5.jpg", caption:"Photo 5"},
-  {src:"img/6.png", caption:"Photo 6"},
-  {src:"img/7.jpg", caption:"Photo 7"},
-  {src:"img/8.png", caption:"Photo 8"},
-  {src:"img/9.jpg", caption:"Photo 9"},
-  {src:"img/10.png", caption:"Photo 10"},
-  {src:"img/Grad.png", caption:"Photo 11"},
-  {src:"img/hold.png", caption:"Photo 12"},
+  {src:"img/1.jpg", caption:""},
+  {src:"img/2.jpg", caption:""},
+  {src:"img/3.png", caption:""},
+  {src:"img/4.jpg", caption:""},
+  {src:"img/5.jpg", caption:""},
+  {src:"img/6.png", caption:""},
+  {src:"img/7.jpg", caption:""},
+  {src:"img/8.png", caption:""},
+  {src:"img/9.jpg", caption:""},
+  {src:"img/10.png", caption:""},
+  {src:"img/Grad.png", caption:""},
+  {src:"img/hold.png", caption:""},
 ];
 
 const KISSES = [
