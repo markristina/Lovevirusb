@@ -842,16 +842,39 @@ function initGiftBox(){
 function initSecretMessage(){
   const btn = document.getElementById("secretBtn");
   const reveal = document.getElementById("secretReveal");
-  if (!btn || !reveal) return;
+  const modalEl = document.getElementById("secretModal");
+  const form = document.getElementById("secretForm");
+  const input = document.getElementById("secretInput");
+  const error = document.getElementById("secretError");
+  if (!btn || !reveal || !modalEl || !form || !input || !error) return;
+
+  const modal = new bootstrap.Modal(modalEl);
+
   btn.addEventListener("click", () => {
-    const input = prompt("Enter the secret password:");
-    if (input === null) return;
-    if (input.trim().toLowerCase() === SECRET_PASSWORD){
+    error.textContent = "";
+    input.value = "";
+    modal.show();
+  });
+
+  modalEl.addEventListener("shown.bs.modal", () => {
+    input.focus();
+  });
+
+  form.addEventListener("submit", (event) => {
+    event.preventDefault();
+    const value = input.value.trim().toLowerCase();
+
+    if (value === SECRET_PASSWORD){
       reveal.classList.add("show");
       btn.textContent = "Unlocked ❤️";
-    } else {
-      alert("That's not quite it — think about us. 😉");
+      error.textContent = "";
+      modal.hide();
+      return;
     }
+
+    error.textContent = "That's not quite it - think about us. 😉";
+    input.focus();
+    input.select();
   });
 }
 
