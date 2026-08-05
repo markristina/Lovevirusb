@@ -54,9 +54,7 @@
     <!-- Using your birthday greet audio file -->
     <source src="birthday greet.aac" type="audio/aac">
   </audio>
-  <audio id="shapeAudio" preload="auto" playsinline webkit-playsinline>
-    <source src="Shape.mp3" type="audio/mpeg">
-  </audio>
+  <audio id="shapeAudio" preload="auto" playsinline webkit-playsinline controls style="display:none;"></audio>
 </div>
 
 <!-- ============ 1. HERO SECTION ============ -->
@@ -125,7 +123,7 @@
     <p class="section-eyebrow" data-aos="fade-up">twenty-three small truths</p>
     <h2 class="section-title" data-aos="fade-up">Reasons I Love You</h2>
     <p class="section-hint" id="shapeAudioHint" data-aos="fade-up">Scroll here and the song will try to play automatically. If your phone blocks it, tap the button below.</p>
-    <button type="button" class="btn-glow btn-glow-outline shape-audio-trigger" id="shapeAudioTrigger">Tap to play Shape of My Heart</button>
+    <button type="button" class="btn-glow btn-glow-outline shape-audio-trigger" id="shapeAudioTrigger" style="display:block; margin: 0 auto 1rem;">Tap to play Shape of My Heart</button>
     <div class="reasons-grid" id="reasonsGrid"></div>
   </section>
 

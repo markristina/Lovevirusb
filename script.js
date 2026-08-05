@@ -358,13 +358,17 @@ function initReasonSectionAudio(){
   let gestureSeen = false;
   let sectionVisible = false;
   let observer = null;
+  let hasAttemptedPlayback = false;
 
   const audioUrl = new URL("Shape.mp3", window.location.href).toString();
   shapeAudio.src = audioUrl;
   shapeAudio.volume = 0.65;
   shapeAudio.preload = "auto";
+  shapeAudio.muted = false;
   shapeAudio.setAttribute("playsinline", "");
   shapeAudio.setAttribute("webkit-playsinline", "");
+  shapeAudio.setAttribute("crossorigin", "anonymous");
+  shapeAudio.load();
 
   const setHint = (message) => {
     if (hint) hint.textContent = message;
@@ -386,7 +390,13 @@ function initReasonSectionAudio(){
   };
 
   const tryPlayShapeAudio = () => {
-    if (played || !sectionVisible) return;
+    if (played) return;
+    if (!sectionVisible && !hasAttemptedPlayback) {
+      sectionVisible = true;
+    }
+    if (!sectionVisible && !hasAttemptedPlayback) return;
+
+    hasAttemptedPlayback = true;
     shapeAudio.currentTime = 0;
 
     if (shapeAudio.readyState === 0) {
@@ -398,7 +408,7 @@ function initReasonSectionAudio(){
       playPromise.then(finishPlayback).catch((error) => {
         console.warn("Unable to start Shape.mp3 playback:", error);
         showTrigger();
-        setHint("Tap the button below to play the song. Mobile browsers may need a tap first.");
+        setHint("Tap the button again. Some phones need one more tap to unlock audio.");
       });
     } else {
       finishPlayback();
@@ -414,6 +424,7 @@ function initReasonSectionAudio(){
 
   document.addEventListener("pointerdown", handleGesture, { passive: true });
   document.addEventListener("touchstart", handleGesture, { passive: true });
+  document.addEventListener("mousedown", handleGesture, { passive: true });
   document.addEventListener("keydown", handleGesture);
 
   reasonsSection.addEventListener("click", () => {
@@ -424,8 +435,14 @@ function initReasonSectionAudio(){
 
   if (trigger) {
     trigger.addEventListener("click", (event) => {
+      event.preventDefault();
       event.stopPropagation();
-      tryPlayShapeAudio();
+      handleGesture();
+      shapeAudio.load();
+      shapeAudio.play().then(finishPlayback).catch(() => {
+        showTrigger();
+        setHint("Tap the button again to start the song.");
+      });
     });
   }
 
