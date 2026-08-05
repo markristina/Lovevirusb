@@ -76,11 +76,15 @@ const COMPLIMENTS = [
   "You make everything better ❤️","I love you ❤️"
 ];
 
+const REDUCED_MOTION = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+const MOBILE_VIEW = window.matchMedia("(max-width: 768px)").matches;
+const LOW_POWER = MOBILE_VIEW || (navigator.hardwareConcurrency && navigator.hardwareConcurrency <= 4);
+
 /* ==========================================================================
    INITIAL SETUP
    ========================================================================== */
 document.addEventListener("DOMContentLoaded", () => {
-  AOS.init({ duration: 900, once: true, offset: 60 });
+  AOS.init({ duration: REDUCED_MOTION ? 400 : 900, once: true, offset: 60, disable: REDUCED_MOTION });
 
   const initializers = [
     runLoadingScreen,
@@ -89,7 +93,6 @@ document.addEventListener("DOMContentLoaded", () => {
     initStarsCanvas,
     initFallingHearts,
     initFloatingCompliments,
-    initThemeToggle,
     initBackToTop,
     initMusicPlayer,
     initHeroBalloons,
@@ -105,6 +108,7 @@ document.addEventListener("DOMContentLoaded", () => {
     initLoveMeter,
     initGiftBox,
     initSecretMessage,
+    initChatbot,
     initCelebrateAndFireworks,
     initOpenSurpriseButton
   ];
@@ -142,7 +146,7 @@ function runLoadingScreen(){
 function initCustomCursor(){
   const dot = document.getElementById("cursorDot");
   const ring = document.getElementById("cursorRing");
-  if (window.matchMedia("(max-width: 768px)").matches) return;
+  if (REDUCED_MOTION || LOW_POWER) return;
   let rx = 0, ry = 0;
   window.addEventListener("mousemove", (e) => {
     dot.style.left = e.clientX + "px"; dot.style.top = e.clientY + "px";
@@ -164,18 +168,36 @@ function initCustomCursor(){
    ========================================================================== */
 function initScrollProgress(){
   const bar = document.getElementById("scrollProgressBar");
-  window.addEventListener("scroll", () => {
+  let ticking = false;
+
+  const updateBar = () => {
     const h = document.documentElement;
     const scrolled = (h.scrollTop) / (h.scrollHeight - h.clientHeight) * 100;
     bar.style.width = scrolled + "%";
-  });
+    ticking = false;
+  };
+
+  window.addEventListener("scroll", () => {
+    if (!ticking) {
+      ticking = true;
+      requestAnimationFrame(updateBar);
+    }
+  }, { passive: true });
 }
 function initBackToTop(){
   const btn = document.getElementById("backToTop");
   if (!btn) return;
-  window.addEventListener("scroll", () => {
+  let ticking = false;
+  const updateButton = () => {
     btn.classList.toggle("show", window.scrollY > 600);
-  });
+    ticking = false;
+  };
+  window.addEventListener("scroll", () => {
+    if (!ticking) {
+      ticking = true;
+      requestAnimationFrame(updateButton);
+    }
+  }, { passive: true });
   btn.addEventListener("click", () => window.scrollTo({ top: 0, behavior: "smooth" }));
 }
 
@@ -186,42 +208,58 @@ function initStarsCanvas(){
   const canvas = document.getElementById("starsCanvas");
   const ctx = canvas.getContext("2d");
   let stars = [];
+  const targetFps = REDUCED_MOTION || LOW_POWER ? 24 : 60;
+  let lastFrame = 0;
+
   function resize(){
     canvas.width = window.innerWidth;
     canvas.height = document.documentElement.scrollHeight;
-    stars = Array.from({length: Math.floor(canvas.width/6)}, () => ({
+    const starCount = Math.max(40, Math.floor((canvas.width * canvas.height) / 22000));
+    stars = Array.from({length: Math.min(starCount, LOW_POWER ? 90 : 160)}, () => ({
       x: Math.random()*canvas.width,
       y: Math.random()*canvas.height,
-      r: Math.random()*1.4+.3,
-      speed: Math.random()*.6+.15,
+      r: Math.random()*1.2+.25,
+      speed: Math.random()*.5+.12,
       phase: Math.random()*Math.PI*2
     }));
   }
   resize();
   window.addEventListener("resize", resize);
+
   let t = 0;
-  function draw(){
-    t += 0.02;
-    ctx.clearRect(0,0,canvas.width,canvas.height);
-    for (const s of stars){
-      const twinkle = (Math.sin(t*s.speed + s.phase)+1)/2;
-      ctx.beginPath();
-      ctx.arc(s.x, s.y, s.r, 0, Math.PI*2);
-      ctx.fillStyle = `rgba(255,255,255,${0.25+twinkle*0.75})`;
-      ctx.fill();
+  function draw(ts){
+    if (ts - lastFrame >= 1000 / targetFps) {
+      t += 0.02;
+      ctx.clearRect(0,0,canvas.width,canvas.height);
+      for (const s of stars){
+        const twinkle = (Math.sin(t*s.speed + s.phase)+1)/2;
+        ctx.beginPath();
+        ctx.arc(s.x, s.y, s.r, 0, Math.PI*2);
+        ctx.fillStyle = `rgba(255,255,255,${0.2+twinkle*0.6})`;
+        ctx.fill();
+      }
+      lastFrame = ts;
     }
     requestAnimationFrame(draw);
   }
-  draw();
+  draw(0);
 }
 
 /* ==========================================================================
    FALLING HEARTS (continuous, background)
    ========================================================================== */
 function initFallingHearts(){
+  if (REDUCED_MOTION || LOW_POWER) return;
+
   const container = document.getElementById("fallingHearts");
   const symbols = ["❤","💗","💕","💓"];
-  setInterval(() => {
+  let activeHearts = 0;
+  const maxHearts = MOBILE_VIEW ? 8 : 16;
+
+  const spawnHeart = () => {
+    if (activeHearts >= maxHearts) return;
+    activeHearts += 1;
+
     const heart = document.createElement("span");
     heart.className = "falling-heart";
     heart.textContent = symbols[Math.floor(Math.random()*symbols.length)];
@@ -234,39 +272,48 @@ function initFallingHearts(){
     heart.style.setProperty("--drift", drift);
     heart.style.animationDuration = duration + "s";
     container.appendChild(heart);
-    setTimeout(() => heart.remove(), duration*1000);
-  }, 700);
+
+    setTimeout(() => {
+      heart.remove();
+      activeHearts = Math.max(0, activeHearts - 1);
+    }, duration * 1000);
+  };
+
+  setInterval(spawnHeart, 900);
 }
 
 /* ==========================================================================
    FLOATING COMPLIMENTS (random every few seconds)
    ========================================================================== */
 function initFloatingCompliments(){
+  if (REDUCED_MOTION || LOW_POWER) return;
+
   const container = document.getElementById("floatingCompliments");
-  setInterval(() => {
+  let activeBubbles = 0;
+  const maxBubbles = MOBILE_VIEW ? 3 : 5;
+
+  const spawnBubble = () => {
+    if (activeBubbles >= maxBubbles) return;
+    activeBubbles += 1;
+
     const bubble = document.createElement("div");
     bubble.className = "compliment-bubble";
     bubble.textContent = COMPLIMENTS[Math.floor(Math.random()*COMPLIMENTS.length)];
     bubble.style.left = (10 + Math.random()*70) + "vw";
     bubble.style.top = (15 + Math.random()*65) + "vh";
     container.appendChild(bubble);
-    setTimeout(() => bubble.remove(), 5000);
-  }, 6000);
+    setTimeout(() => {
+      bubble.remove();
+      activeBubbles = Math.max(0, activeBubbles - 1);
+    }, 5000);
+  };
+
+  setInterval(spawnBubble, 9000);
 }
 
 /* ==========================================================================
    THEME TOGGLE
    ========================================================================== */
-function initThemeToggle(){
-  const btn = document.getElementById("themeToggle");
-  if (!btn) return;
-  btn.addEventListener("click", () => {
-    const html = document.documentElement;
-    const isLight = html.getAttribute("data-theme") === "light";
-    html.setAttribute("data-theme", isLight ? "dark" : "light");
-  });
-}
-
 /* ==========================================================================
    MUSIC PLAYER
    ========================================================================== */
@@ -349,8 +396,11 @@ function initReasonSectionAudio(){
    HERO: FLOATING BALLOONS
    ========================================================================== */
 function initHeroBalloons(){
+  if (REDUCED_MOTION || LOW_POWER) return;
+
   const container = document.getElementById("heroBalloons");
   const colors = ["#FF4FA3","#7C5CFF","#F4C466","#C9A6FF","#FF8FC7"];
+  const initialCount = MOBILE_VIEW ? 4 : 6;
   function spawn(){
     const balloon = document.createElement("div");
     balloon.className = "balloon";
@@ -366,8 +416,8 @@ function initHeroBalloons(){
     container.appendChild(balloon);
     setTimeout(() => balloon.remove(), duration*1000);
   }
-  for (let i=0;i<6;i++) setTimeout(spawn, i*900);
-  setInterval(spawn, 2200);
+  for (let i=0;i<initialCount;i++) setTimeout(spawn, i*900);
+  setInterval(spawn, MOBILE_VIEW ? 3200 : 2200);
 }
 function popBalloon(balloon){
   balloon.style.transition = "transform .15s, opacity .15s";
@@ -381,6 +431,8 @@ function popBalloon(balloon){
    Traces a heart shape out of connected, twinkling stars in the night sky.
    ========================================================================== */
 function initConstellationHeart(){
+  if (REDUCED_MOTION || LOW_POWER) return;
+
   const canvas = document.getElementById("constellationCanvas");
   const ctx = canvas.getContext("2d");
   const hero = document.getElementById("hero");
@@ -403,7 +455,7 @@ function initConstellationHeart(){
     }
     return pts;
   }
-  const rawPoints = heartPoints(26);
+  const rawPoints = heartPoints(MOBILE_VIEW ? 16 : 26);
 
   let progress = 0; // draw-on reveal 0 -> 1
   let startTime = null;
@@ -804,6 +856,79 @@ function initSecretMessage(){
 }
 
 /* ==========================================================================
+   CHATBOT ABOUT BRILIAN
+   ========================================================================== */
+function initChatbot(){
+  const form = document.getElementById("chatbotForm");
+  const input = document.getElementById("chatbotInput");
+  const messages = document.getElementById("chatbotMessages");
+  if (!form || !input || !messages) return;
+
+  const knowledge = [
+    {
+      pattern: /(birthday|born|august 6|2003|date)/i,
+      answer: "Brilian C. Galon was born on August 6, 2003, and that makes his birthday extra precious. He is the kind of person who deserves all the love, laughter, and celebration in the world."
+    },
+    {
+      pattern: /(love|loved|adore|sweet|special|beautiful|heart)/i,
+      answer: "Aww, that’s so lovely. Brilian is sweet, beautiful in spirit, and so special that loving him feels like the easiest and happiest thing in the world."
+    },
+    {
+      pattern: /(kind|caring|personality|character|gentle|thoughtful)/i,
+      answer: "Brilian is kind, thoughtful, caring, and gentle. He has a beautiful soul and a heart that makes people feel safe, seen, and cherished."
+    },
+    {
+      pattern: /(smile|laugh|funny|joke|joy)/i,
+      answer: "His smile and laugh are pure sunshine. He has a way of making even ordinary moments feel warm, happy, and full of joy."
+    },
+    {
+      pattern: /(home|forever|future|stay|always)/i,
+      answer: "He feels like home—someone you want to treasure, celebrate, and love forever. He is the kind of person you never want to let go of."
+    },
+    {
+      pattern: /(hello|hi|hey|who are you|what are you)/i,
+      answer: "Hi love 💖 I’m your sweet little birthday chatbot for Brilian C. Galon. Ask me about his birthday, his heart, or why he is so amazing."
+    },
+    {
+      pattern: /(name|brilian c. galon|brilian)/i,
+      answer: "Brilian C. Galon is the sweetest person ever—full of love, warmth, and charm. He deserves every lovely thing in the world on his birthday and every day after."
+    }
+  ];
+
+  const fallbacks = [
+    "Brilian is the kind of person who makes every ordinary moment feel meaningful and loved.",
+    "He is warm, lovable, and deeply treasured. That is why he is so special to the heart.",
+    "He has a gentle soul and a beautiful heart that makes people feel at ease and adored.",
+    "His presence feels comforting, precious, and full of love—just like a perfect birthday blessing.",
+    "He is someone you can love deeply, celebrate proudly, and cherish forever."
+  ];
+
+  const addMessage = (text, sender) => {
+    const bubble = document.createElement("div");
+    bubble.className = `message ${sender}`;
+    bubble.textContent = text;
+    messages.appendChild(bubble);
+    messages.scrollTop = messages.scrollHeight;
+  };
+
+  const getReply = (text) => {
+    const match = knowledge.find((item) => item.pattern.test(text));
+    if (match) return match.answer;
+    return fallbacks[Math.floor(Math.random() * fallbacks.length)];
+  };
+
+  form.addEventListener("submit", (event) => {
+    event.preventDefault();
+    const text = input.value.trim();
+    if (!text) return;
+
+    addMessage(text, "user");
+    input.value = "";
+    setTimeout(() => addMessage(getReply(text), "bot"), 180);
+  });
+}
+
+/* ==========================================================================
    CELEBRATE BUTTON + CANVAS FIREWORKS + FINAL CELEBRATION
    ========================================================================== */
 function initCelebrateAndFireworks(){
@@ -819,35 +944,43 @@ function initCelebrateAndFireworks(){
   window.addEventListener("resize", resize);
 
   let particles = [];
+  let animationFrame = null;
+
   function launchFirework(x, y){
-    const count = 60;
+    const count = LOW_POWER ? 36 : 60;
     const hueBase = Math.random()*360;
     for (let i=0;i<count;i++){
       const angle = (Math.PI*2*i)/count;
-      const speed = 2 + Math.random()*3;
+      const speed = LOW_POWER ? 1.4 + Math.random()*1.8 : 2 + Math.random()*3;
       particles.push({
         x, y,
         vx: Math.cos(angle)*speed,
         vy: Math.sin(angle)*speed,
-        life: 60 + Math.random()*20,
+        life: LOW_POWER ? 45 + Math.random()*12 : 60 + Math.random()*20,
         hue: hueBase + Math.random()*40 - 20
       });
     }
+    if (!animationFrame) animationFrame = requestAnimationFrame(loop);
   }
+
   function loop(){
-    ctx.fillStyle = "rgba(5,6,20,0.15)";
+    if (particles.length === 0) {
+      animationFrame = null;
+      return;
+    }
+
+    ctx.fillStyle = "rgba(5,6,20,0.12)";
     ctx.clearRect(0,0,canvas.width,canvas.height);
     particles.forEach(p => {
       p.x += p.vx; p.y += p.vy; p.vy += 0.03; p.life -= 1;
       ctx.beginPath();
-      ctx.arc(p.x,p.y,2.2,0,Math.PI*2);
+      ctx.arc(p.x,p.y,LOW_POWER ? 1.4 : 2.2,0,Math.PI*2);
       ctx.fillStyle = `hsla(${p.hue},90%,65%,${Math.max(p.life/80,0)})`;
       ctx.fill();
     });
     particles = particles.filter(p => p.life > 0);
-    requestAnimationFrame(loop);
+    animationFrame = requestAnimationFrame(loop);
   }
-  loop();
 
   celebrateBtn.addEventListener("click", () => {
     for (let i=0;i<5;i++){
@@ -883,7 +1016,7 @@ function initCelebrateAndFireworks(){
    ========================================================================== */
 function launchConfettiBurst(){
   const colors = ["#FF4FA3","#F4C466","#7C5CFF","#C9A6FF","#FF8FC7"];
-  const count = 60;
+  const count = LOW_POWER ? 36 : 60;
   for (let i=0;i<count;i++){
     const piece = document.createElement("div");
     const size = 6 + Math.random()*6;
