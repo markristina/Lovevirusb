@@ -357,7 +357,10 @@ function initReasonSectionAudio(){
   let played = false;
   let gestureSeen = false;
   let sectionVisible = false;
+  let observer = null;
 
+  const audioUrl = new URL("Shape.mp3", window.location.href).toString();
+  shapeAudio.src = audioUrl;
   shapeAudio.volume = 0.65;
   shapeAudio.preload = "auto";
   shapeAudio.setAttribute("playsinline", "");
@@ -375,19 +378,31 @@ function initReasonSectionAudio(){
     if (trigger) trigger.hidden = true;
   };
 
+  const finishPlayback = () => {
+    played = true;
+    hideTrigger();
+    setHint("Now playing: Shape of My Heart.");
+    if (observer) observer.unobserve(reasonsSection);
+  };
+
   const tryPlayShapeAudio = () => {
-    if (played) return;
-    if (!sectionVisible) return;
+    if (played || !sectionVisible) return;
     shapeAudio.currentTime = 0;
-    shapeAudio.play().then(() => {
-      played = true;
-      hideTrigger();
-      setHint("Now playing: Shape of My Heart.");
-      observer.unobserve(reasonsSection);
-    }).catch(() => {
-      showTrigger();
-      setHint("Your phone blocked autoplay. Tap the button below to play the song.");
-    });
+
+    if (shapeAudio.readyState === 0) {
+      shapeAudio.load();
+    }
+
+    const playPromise = shapeAudio.play();
+    if (playPromise && typeof playPromise.then === "function") {
+      playPromise.then(finishPlayback).catch((error) => {
+        console.warn("Unable to start Shape.mp3 playback:", error);
+        showTrigger();
+        setHint("Tap the button below to play the song. Mobile browsers may need a tap first.");
+      });
+    } else {
+      finishPlayback();
+    }
   };
 
   const handleGesture = () => {
@@ -398,6 +413,7 @@ function initReasonSectionAudio(){
   };
 
   document.addEventListener("pointerdown", handleGesture, { passive: true });
+  document.addEventListener("touchstart", handleGesture, { passive: true });
   document.addEventListener("keydown", handleGesture);
 
   reasonsSection.addEventListener("click", () => {
@@ -407,12 +423,24 @@ function initReasonSectionAudio(){
   });
 
   if (trigger) {
-    trigger.addEventListener("click", () => {
+    trigger.addEventListener("click", (event) => {
+      event.stopPropagation();
       tryPlayShapeAudio();
     });
   }
 
-  const observer = new IntersectionObserver((entries) => {
+  shapeAudio.addEventListener("canplaythrough", () => {
+    if (gestureSeen && sectionVisible && !played) {
+      tryPlayShapeAudio();
+    }
+  });
+
+  shapeAudio.addEventListener("error", () => {
+    showTrigger();
+    setHint("The song could not be loaded. Please refresh the page and tap the button again.");
+  });
+
+  observer = new IntersectionObserver((entries) => {
     entries.forEach(entry => {
       sectionVisible = entry.isIntersecting;
       if (sectionVisible && !played) {
