@@ -335,24 +335,44 @@ h1,h2,h3{font-family:var(--font-display);}
    GALLERY
    ========================================================================== */
 .gallery-hint{font-size:.82rem;color:rgba(251,248,255,.55);margin-bottom:2rem;}
-.gallery-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:1.3rem;}
+.gallery-grid{
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:1.1rem;
+  align-items:stretch;
+}
 .gallery-item{
-  position:relative;border-radius:18px;overflow:hidden;min-height:220px;cursor:pointer;
-  box-shadow:0 10px 30px rgba(0,0,0,.35);aspect-ratio:4/3;
+  position:relative;border-radius:18px;overflow:hidden;cursor:pointer;
+  box-shadow:0 12px 30px rgba(0,0,0,.35);
+  width:100%;
+  aspect-ratio:1 / 1;
+  transition:transform .35s ease, box-shadow .35s ease;
+}
+.gallery-item:hover{
+  transform:translateY(-5px);
+  box-shadow:0 22px 50px rgba(255,79,163,.28);
 }
 .gallery-item-inner{
   width:100%;height:100%;display:flex;align-items:center;justify-content:center;
-  overflow:hidden;transition:transform .5s ease;
+  overflow:hidden;
 }
 .gallery-item-inner img{
   width:100%;height:100%;object-fit:cover;
+  transition:transform .8s cubic-bezier(.2,.8,.2,1);
 }
-.gallery-item:hover .gallery-item-inner{transform:scale(1.03);}
+.gallery-item:hover .gallery-item-inner img{transform:scale(1.08);}
+.gallery-item::after{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(to top,rgba(5,6,20,.7),transparent 55%);
+  opacity:.55;transition:opacity .35s ease;pointer-events:none;
+}
+.gallery-item:hover::after{opacity:.85;}
 .gallery-caption{
-  position:absolute;bottom:0;left:0;right:0;padding:.7rem;
-  background:linear-gradient(transparent,rgba(0,0,0,.65));
-  font-size:.85rem;color:#fff;text-align:left;
+  position:absolute;bottom:0;left:0;right:0;padding:.8rem;
+  font-size:.85rem;color:#fff;text-align:left;z-index:2;
+  transform:translateY(6px);opacity:.95;transition:transform .35s ease,opacity .35s ease;
 }
+.gallery-item:hover .gallery-caption{transform:translateY(0);opacity:1;}
 .modal-image-box{
   width:100%;height:340px;border-radius:16px;display:flex;align-items:center;justify-content:center;
   overflow:hidden;background:rgba(0,0,0,.08);margin-bottom:1rem;
@@ -562,9 +582,9 @@ h1,h2,h3{font-family:var(--font-display);}
   .theme-toggle{top:18px;right:18px;}
   .back-to-top{bottom:18px;right:18px;}
   .letter-card{padding:2rem 1.4rem;min-height:auto;}
-  .letter-text{font-size:1.05rem;}
-  .gallery-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:1rem;}
-  .gallery-item{min-height:180px;aspect-ratio:4/3;}
+.letter-text{font-size:1.05rem;}
+  .gallery-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:1rem;}
+  .gallery-item{aspect-ratio:1 / 1;}
   .gallery-item-inner{font-size:2rem;}
   .gallery-caption{font-size:.88rem;}
   .modal-image-box{height:280px;font-size:2.6rem;}
@@ -592,9 +612,9 @@ h1,h2,h3{font-family:var(--font-display);}
   .letter-text{font-size:1rem;}
   .reasons-grid{grid-template-columns:1fr;}
   .timeline{padding-left:0;}
-  .timeline-item{padding-left:1.6rem;padding-right:.8rem;}
-  .gallery-grid{grid-template-columns:1fr;gap:.85rem;}
-  .gallery-item{min-height:180px;aspect-ratio:3/2;}
+.timeline-item{padding-left:1.6rem;padding-right:.8rem;}
+  .gallery-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:.85rem;}
+  .gallery-item{aspect-ratio:1 / 1;}
   .gallery-caption{font-size:.82rem;padding:.65rem;}
   .modal-image-box{height:auto;aspect-ratio:16/9;max-height:240px;}
   .coupon{min-height:120px;}
@@ -614,9 +634,9 @@ h1,h2,h3{font-family:var(--font-display);}
   .countdown-grid{gap:.75rem;}
   .countdown-box{padding:.8rem .6rem;}
   .countdown-num{font-size:1.5rem;}
-  .countdown-date{font-size:.8rem;}
-  .gallery-grid{gap:.7rem;}
-  .gallery-item{min-height:150px;aspect-ratio:1/1;}
+.countdown-date{font-size:.8rem;}
+  .gallery-grid{grid-template-columns:1fr;gap:.7rem;}
+  .gallery-item{aspect-ratio:1 / 1;}
   .gallery-caption{font-size:.76rem;padding:.55rem;}
   .modal-image-box{height:220px;}
   .cake-svg{width:100%;}

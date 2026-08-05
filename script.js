@@ -610,7 +610,7 @@ function buildGallery(){
     const el = document.createElement("div");
     el.className = "gallery-item";
     el.setAttribute("data-aos","zoom-in");
-    el.setAttribute("data-aos-delay", idx*60);
+    el.setAttribute("data-aos-delay", (idx%6)*50);
     el.innerHTML = `
       <div class="gallery-item-inner">
         <img src="${item.src}" alt="${item.caption}" loading="lazy" decoding="async">
